@@ -1,0 +1,843 @@
+2 a8 a5
+Board is not initialized!
+1
+OK
+3
+
+  a b c d e f g h
+  - - - - - - - -
+8|r n b q k b n r|
+7|p p p p p p p p|
+6|               |
+5|               |
+4|               |
+3|               |
+2|P P P P P P P P|
+1|R N B Q K B N R|
+  - - - - - - - -
+2 b1 c3
+YES
+2 x7 g6
+NO
+4
+
+#include <stdio.h>
+
+ void initBoard(char* board)
+{
+	int i;
+
+	char testarray[]={'r','n','b','q','k','b','n','r',
+					  ' ',' ',' ',' ',' ',' ',' ',' ',
+					  ' ',' ',' ',' ',' ',' ',' ',' ',
+					  ' ',' ',' ',' ',' ',' ',' ',' ',
+					  ' ',' ',' ',' ',' ',' ',' ',' ',
+					  ' ',' ',' ',' ',' ',' ',' ',' ',
+					  ' ',' ',' ',' ',' ',' ',' ',' ',
+					  'R','N','B','Q','K','B','N','R'};
+
+	for(i=0;i<64;i++)
+	{
+		board[i]=testarray[i];
+		/*printf("%c\n", board[i] );*/
+	}
+
+} 
+
+void emptyBuffer()
+{
+	while ( getchar() != '\n' );
+} 
+
+int absulute(int number)
+{
+	if(number<0)
+	{
+		number *=-1;
+	}
+	return number;
+}
+
+void getPosition(char *col, int *row);  
+int isValidCell(char col, int row); 
+void printBoard(char *board);
+int isPieceMovable(char *board);
+
+int isRookMovable(char *board, char sourceCol, int sourceRow, char targetCol, int targetRow);
+int isBishopMovable(char *board, char sourceCol, int sourceRow, char targetCol, int targetRow);
+int isKnightMovable(char *board, char sourceCol, int sourceRow, char targetCol, int targetRow);
+
+int moveVertical(char *board,int sourceRow, int targetRow, char sourceCol);
+int moveHorizontal(char *board,int sourceCol, int targetCol, char sourceRow);
+
+int movePositiveSlope(char *board, int sourceRow, int targetRow, char sourceCol,char targetCol);
+int moveNegativeSlope(char *board, int sourceCol, int targetCol, char sourceRow,char targetRow);
+
+int main()
+{
+	char board [64];
+	int initComplete = 0;
+	char empty;
+
+	int command;
+	scanf("%d", &command);
+
+	while(command!=4)
+	{
+		switch(command)
+		{
+			case 1: 
+
+				initBoard(board); 
+				initComplete = 1; 
+				printf("OK\n");
+				break;
+			
+			case 2: 
+			
+				/*Read space character after command number*/
+				scanf("%c", &empty);
+				if (initComplete)
+				{
+					if(isPieceMovable(board))
+						printf("YES\n");
+					else
+						printf("NO\n");
+				}
+				else
+				{  
+					printf("Board is not initialized!\n");
+					emptyBuffer();
+				}
+				break;
+			
+			case 3: 
+			
+				if (initComplete)
+					printBoard(board);
+				else  
+					printf("Board is not initialized!\n");
+					emptyBuffer();
+				break;
+
+			default: 
+				
+				printf("Invalid command!\n"); 
+				emptyBuffer(); 
+				break;
+
+		}	
+		
+		scanf("%d", &command);
+	
+	}
+	return 0;
+}
+
+
+
+int isPieceMovable(char *board)
+{
+	char sourceCol,targetCol; 
+	int sourceRow, targetRow;
+	char chessPiece;
+	
+
+	getPosition(&sourceCol, &sourceRow); 
+	getPosition( &targetCol, &targetRow);
+
+	/*printf("sourceCol >> %c sourceRow >> %d\n",sourceCol,sourceRow );
+ 	printf(" targetCol >> %c targetRow >> %d\n",targetCol,targetRow );*/
+
+ 	if(!(isValidCell(sourceCol,sourceRow) && isValidCell(targetCol,targetRow)))
+ 	{
+ 		return 0;
+ 	}
+
+ 	chessPiece=board[(absulute(sourceRow-8)*8 +(sourceCol%96))-1];
+ 	/*printf(">>%c \n",chessPiece);*/
+ 	/*printf("devam\n");*/
+
+	
+       if(chessPiece=='r' || chessPiece=='R')
+         
+         {/*printf("rook>> kale!\n" );*/
+          return isRookMovable(board,  sourceCol, sourceRow, targetCol,targetRow); 
+  		 }
+       else if(chessPiece=='n' || chessPiece=='N')
+         {/*printf("knight >> at\n" );*/
+     		 return isKnightMovable(board, sourceCol, sourceRow, targetCol,  targetRow);
+ 		 }
+       else if(chessPiece=='b' || chessPiece=='B')
+         {
+         	/*printf("bishop\n");*/
+         	return isBishopMovable(board,  sourceCol, sourceRow, targetCol,targetRow);
+         }
+       else if(chessPiece=='q' || chessPiece=='Q')
+         {printf("queen >> vezir\n" );}
+       else if(chessPiece=='k' || chessPiece=='K')
+         {printf("king >> sah\n" );}
+      else if (chessPiece=='p' || chessPiece=='P') 
+        { printf("pawn piyon\n" ); }
+      else
+      {
+         /*printf("yanlis deluk\n" );*/
+         return 0;
+   	  }
+
+
+	return 1; 
+
+}
+
+int isKnightMovable(char *board, char sourceCol, int sourceRow, char targetCol, int targetRow)/* bi kare gitmiyor*/
+{
+	int i,j,n;
+	int upperPiece[]={'P','R','N','B','Q','K'};
+	int lowerPiece[]={'p','r','n','b','q','k'};
+	char testKnightpiece,targetTestpiece;
+	
+
+	i=sourceRow;
+	j=sourceCol%96;
+	testKnightpiece=board[(absulute((i)-8)*8 +(j))-1];
+	targetTestpiece=board[(absulute((targetRow)-8)*8 +(targetCol%96))-1];
+	
+	if(targetRow-sourceRow ==2 || targetRow-sourceRow == -2)
+	{
+		if(targetRow>sourceRow)/*yukarı*/
+		{	
+			for ( ; i < targetRow ; ++i);
+			
+		
+			if(targetCol%96>sourceCol%96)
+				{j++;}
+			if(targetCol%96<sourceCol%96)
+				{j--;}
+		}
+
+		if(targetRow<sourceRow)/*assagi*/
+		{	
+			for ( ; i > targetRow ; --i);
+			
+			if(targetCol%96>sourceCol%96)
+				{j++;}
+			if(targetCol%96<sourceCol%96)
+				{j--;}
+		}
+	}
+
+	if(targetRow-sourceRow ==1 || targetRow-sourceRow == -1)
+	{
+		if(targetRow>sourceRow)/*yukarı*/
+		{	
+			i++;
+
+			if(targetCol%96>sourceCol%96)
+				{for ( ; j < targetCol%96 ; ++j);}
+
+			if(targetCol%96<sourceCol%96)
+				{for ( ; j > targetCol%96 ; --j);}
+		}
+
+		if(targetRow<sourceRow)/*assagi*/
+		{	
+			i--;
+
+			if(targetCol%96>sourceCol%96)
+				{for ( ; j < targetCol%96 ; ++j);}
+
+			if(targetCol%96<sourceCol%96)
+				{for ( ; j > targetCol%96 ; --j);}
+		}
+	}
+	
+	
+	if( ((int)(testKnightpiece)) < 90 )/* tas büyük */
+	{
+		for (n = 0; n < 6; ++n)
+		{
+			if(upperPiece[n]==targetTestpiece)
+				{return 0 ;}
+		}
+	
+	board[(absulute((sourceRow)-8)*8 +(sourceCol%96))-1]=' ';
+	board[(absulute((i)-8)*8 +(j))-1]=testKnightpiece;
+	return 1;
+	}
+	
+
+	if((int)testKnightpiece > 90 )/* tas kücük */
+	{
+		for (n = 0; n < 6; ++n)
+		{
+			if(lowerPiece[n]==targetTestpiece)
+				{return 0 ;}
+		}
+		
+	board[(absulute((sourceRow)-8)*8 +(sourceCol%96))-1]=' ';
+	board[(absulute((i)-8)*8 +(j))-1]=testKnightpiece;
+	return 1;
+	}
+
+	return 0;	
+}
+
+
+int isBishopMovable(char *board, char sourceCol, int sourceRow, char targetCol, int targetRow)/* bi kare gitmiyor*/
+{
+	if(sourceCol==targetCol)
+	{
+		return 0;
+	}
+
+	if( (targetRow- sourceRow )/(targetCol- sourceCol) == 1 )
+	{
+		return movePositiveSlope(board,sourceRow,targetRow,sourceCol,targetCol);
+	}
+
+	if( (targetRow- sourceRow )/(targetCol- sourceCol) == -1 )
+	{	
+		return moveNegativeSlope(board,sourceCol,targetCol,sourceRow,targetRow);
+	}
+
+	return 0;
+}
+
+
+int isRookMovable(char *board, char sourceCol, int sourceRow, char targetCol, int targetRow)/* bi kare gitmiyor*/
+{
+
+	if(sourceCol==targetCol)
+	{
+		
+		return moveVertical(board,sourceRow,targetRow,sourceCol);
+
+	}
+
+	if(sourceRow==targetRow)
+	{
+		
+		return  moveHorizontal(board,sourceCol,targetCol,sourceRow);
+	}
+
+return 0;
+}
+
+int movePositiveSlope(char *board, int sourceRow, int targetRow, char sourceCol,char targetCol)
+{
+	int i,j,n;
+	char chessPiece,sourcePiece;
+	int upperPiece[]={'P','R','N','B','Q','K'};
+	int lowerPiece[]={'p','r','n','b','q','k'};
+
+
+	sourcePiece=board[(absulute(sourceRow-8)*8 +(sourceCol%96))-1];
+
+
+	if(sourceRow<targetRow)/* sol yukari*/
+	{
+		
+		i = sourceRow +1;
+		j = (sourceCol%96)+1 ;
+
+		/*printf("%d\n",i );*/
+		chessPiece=board[(absulute((i)-8)*8 +(j))-1]; 
+
+		
+		while( (chessPiece==' ') && (i < targetRow ) && (j < targetCol%96)  )
+		{
+			chessPiece=board[(absulute(i-8)*8 +(j))-1];
+			
+			if(chessPiece=='q' || chessPiece=='k'|| chessPiece=='b'|| chessPiece=='n'|| chessPiece=='r' || chessPiece=='P' || chessPiece=='Q' || chessPiece=='K'|| chessPiece=='B'|| chessPiece=='N'|| chessPiece=='R' || chessPiece=='p' )
+	        { /*printf("yokarkadas\n");*/ return 0;}
+				/*board[(absulute(i-8)*8 +(j))-1]='C';*/
+
+			i++;
+			j++;
+			
+		}
+		
+		/*printf(">>%d == %d\n",i ,targetRow );
+		printf("<<%d %d\n",j ,targetCol%96);*/
+		
+		if( (j==targetCol%96) && (i==targetRow) )
+		{
+			
+			
+			chessPiece=board[(absulute(i-8)*8 +(j))-1];
+			
+			/*if(chessPiece=='q' || chessPiece=='k'|| chessPiece=='b'|| chessPiece=='n'|| chessPiece=='r' || chessPiece=='p' || chessPiece==' ' ) */
+
+			if( ((int)(chessPiece)) < 90 )/* tas büyük */
+			{
+				for (n = 0; n < 6; ++n)
+				{
+					if(upperPiece[n]==chessPiece)
+						{return 0 ;}
+				}
+			
+			board[(absulute(i-8)*8 +(j))-1]=sourcePiece;
+			board[(absulute(sourceRow-8)*8 +(sourceCol%96))-1]=' ';
+			printf("%c\n", sourcePiece);
+			return 1;
+			}
+			
+
+			if((int)chessPiece > 90 )/* tas kücük */
+			{
+				for (n = 0; n < 6; ++n)
+				{
+					if(lowerPiece[n]==chessPiece)
+						{return 0 ;}
+				}
+				
+			board[(absulute(i-8)*8 +(j))-1]=sourcePiece;
+			board[(absulute(sourceRow-8)*8 +(sourceCol%96))-1]=' ';
+			printf("%c\n", sourcePiece);
+			return 1;
+			}
+
+
+
+
+			
+			/*board[(absulute(i-8)*8 +(j))-1]=sourcePiece;
+			board[(absulute(sourceRow-8)*8 +(sourceCol%96))-1]=' ';*/ /* asıl olması gerekn */
+			
+			return 1;
+		}
+
+
+		else
+		{
+			/*printf("olmadi\n");*/
+			return 0;
+		}
+	
+	}
+
+	else if(sourceRow>targetRow)/* sağ assagi*/
+	{
+		
+		i = sourceRow -1;
+		j = (sourceCol%96)-1 ;
+
+		/*printf("%d\n",i );*/
+		chessPiece=board[(absulute((i)-8)*8 +(j))-1]; 
+
+		
+		while( (chessPiece==' ') && (i > targetRow ) && (j > targetCol%96)  )
+		{
+			chessPiece=board[(absulute(i-8)*8 +(j))-1];
+			
+			if(chessPiece=='q' || chessPiece=='k'|| chessPiece=='b'|| chessPiece=='n'|| chessPiece=='r' || chessPiece=='P' || chessPiece=='Q' || chessPiece=='K'|| chessPiece=='B'|| chessPiece=='N'|| chessPiece=='R' || chessPiece=='p' )
+	        { /*printf("yokarkadas\n");*/ return 0;}
+				/*board[(absulute(i-8)*8 +(j))-1]='C';*/
+
+			i--;
+			j--;
+			
+		}
+		
+		/*printf(">>%d == %d\n",i ,targetRow );
+		printf("<<%d %d\n",j ,targetCol%96);*/
+		
+		if( (j==targetCol%96) && (i==targetRow) )
+		{
+			
+			chessPiece=board[(absulute(i-8)*8 +(j))-1];
+			
+			if(chessPiece=='q' || chessPiece=='k'|| chessPiece=='b'|| chessPiece=='n'|| chessPiece=='r' || chessPiece=='p' || chessPiece==' ' ) 
+			
+			board[(absulute(i-8)*8 +(j))-1]=sourcePiece;
+			board[(absulute(sourceRow-8)*8 +(sourceCol%96))-1]=' ';
+			
+			return 1;
+		}
+
+
+		else
+		{
+			/*printf("olmadi\n");*/
+			return 0;
+		}
+	
+	}
+
+	else
+	{
+		return 0;
+	}
+
+	return 0;
+
+}
+
+int moveNegativeSlope(char *board, int sourceCol, int targetCol, char sourceRow ,char targetRow)
+{
+	int i,j;
+	char chessPiece,sourcePiece;
+
+	sourcePiece=board[(absulute(sourceRow-8)*8 +(sourceCol%96))-1];
+
+	if(sourceRow<targetRow)/* sol yukari*/
+	{
+		
+		i = sourceRow +1;
+		j = (sourceCol%96)-1 ;
+
+		/*printf("%d\n",i );*/
+		chessPiece=board[(absulute((i)-8)*8 +(j))-1]; 
+
+		
+		while( (chessPiece==' ') && (i < targetRow ) && (j > targetCol%96)  )
+		{
+			chessPiece=board[(absulute(i-8)*8 +(j))-1];
+			
+			if(chessPiece=='q' || chessPiece=='k'|| chessPiece=='b'|| chessPiece=='n'|| chessPiece=='r' || chessPiece=='P' || chessPiece=='Q' || chessPiece=='K'|| chessPiece=='B'|| chessPiece=='N'|| chessPiece=='R' || chessPiece=='p' )
+	        { /*printf("yokarkadas\n");*/ return 0;}
+			
+			i++;
+			j--;
+			
+		}
+		
+		if( (j==targetCol%96) && (i==targetRow) )
+		{
+			
+			
+			chessPiece=board[(absulute(i-8)*8 +(j))-1];
+			
+			if(chessPiece=='q' || chessPiece=='k'|| chessPiece=='b'|| chessPiece=='n'|| chessPiece=='r' || chessPiece=='p' || chessPiece==' ' ) 
+			
+			board[(absulute(i-8)*8 +(j))-1]=sourcePiece;
+			board[(absulute(sourceRow-8)*8 +(sourceCol%96))-1]=' ';
+			
+			return 1;
+		}
+
+
+		else
+		{
+			/*printf("olmadi\n");*/
+			return 0;
+		}
+	
+	}
+
+	else if(sourceRow>targetRow)/* sag assagi*/
+	{
+		
+		i = sourceRow -1;
+		j = (sourceCol%96)+1 ;
+
+		/*printf("%d\n",i );*/
+		chessPiece=board[(absulute((i)-8)*8 +(j))-1]; 
+
+		
+		while( (chessPiece==' ') && (i > targetRow ) && (j < targetCol%96)  )
+		{
+			chessPiece=board[(absulute(i-8)*8 +(j))-1];
+			
+			if(chessPiece=='q' || chessPiece=='k'|| chessPiece=='b'|| chessPiece=='n'|| chessPiece=='r' || chessPiece=='P' || chessPiece=='Q' || chessPiece=='K'|| chessPiece=='B'|| chessPiece=='N'|| chessPiece=='R' || chessPiece=='p' )
+	        { /*printf("yokarkadas\n");*/ return 0;}
+		
+
+			i--;
+			j++;
+			
+		}
+		
+		/*printf(">>%d == %d\n",i ,targetRow );
+		printf("<<%d %d\n",j ,targetCol%96);*/
+		
+		if( (j==targetCol%96) && (i==targetRow) )
+		{
+			
+			chessPiece=board[(absulute(i-8)*8 +(j))-1];
+			
+			if(chessPiece=='q' || chessPiece=='k'|| chessPiece=='b'|| chessPiece=='n'|| chessPiece=='r' || chessPiece=='p' || chessPiece==' ' ) 
+			
+			board[(absulute(i-8)*8 +(j))-1]=sourcePiece;
+			board[(absulute(sourceRow-8)*8 +(sourceCol%96))-1]=' ';
+
+			
+			return 1;
+		}
+
+
+		else
+		{
+			/*printf("olmadi\n");*/
+			return 0;
+		}
+	
+	}
+
+	else
+	{
+		return 0;
+	}
+
+	return 0;
+
+}
+
+
+int moveHorizontal(char *board,int sourceCol, int targetCol, char sourceRow)
+{
+	int i;
+	char chessPiece,sourcePiece;
+
+	sourcePiece=board[(absulute(sourceRow-8)*8 +(sourceCol%96))-1];
+
+	if(sourceCol<targetCol)/* sag*/
+	{
+		
+		i = (sourceCol%96)+1 ; 
+		/*printf("%d\n",i );*/
+		chessPiece=board[(absulute((sourceRow)-8)*8 +(i))-1]; 
+
+		
+		while( (chessPiece==' ') && (i < targetCol%96) )
+		{
+			chessPiece=board[(absulute(sourceRow-8)*8 +(i))-1];
+			
+			if(chessPiece=='q' || chessPiece=='k'|| chessPiece=='b'|| chessPiece=='n'|| chessPiece=='r' || chessPiece=='P' || chessPiece=='Q' || chessPiece=='K'|| chessPiece=='B'|| chessPiece=='N'|| chessPiece=='R' || chessPiece=='p' )
+	        { /*printf("yokarkadas\n");*/ return 0;}
+
+			i++;
+			
+		}
+
+		if( (i==targetCol%96) )
+		{
+			
+			chessPiece=board[(absulute(sourceRow-8)*8 +(i))-1];
+			
+			if(chessPiece=='q' || chessPiece=='k'|| chessPiece=='b'|| chessPiece=='n'|| chessPiece=='r' || chessPiece=='p' || chessPiece==' ' ) 
+			
+			board[(absulute(sourceRow-8)*8 +(i))-1]=sourcePiece;
+			board[(absulute(sourceRow-8)*8 +(sourceCol%96))-1]=' ';
+			
+			return 1;
+		}
+		else
+		{
+			/*printf("olmadi\n");*/
+			return 0;
+		}
+	
+	}
+
+	else if(sourceCol>targetCol)/* sol*/
+	{
+		
+		i = (sourceCol%96)-1 ; 
+		/*printf("%d\n",i );*/
+		chessPiece=board[(absulute((sourceRow)-8)*8 +(i))-1]; 
+			
+		while( (chessPiece==' ') && (i > targetCol%96) )
+		{
+			chessPiece=board[(absulute(sourceRow-8)*8 +(i))-1];
+			
+			if(chessPiece=='q' || chessPiece=='k'|| chessPiece=='b'|| chessPiece=='n'|| chessPiece=='r' || chessPiece=='P' || chessPiece=='Q' || chessPiece=='K'|| chessPiece=='B'|| chessPiece=='N'|| chessPiece=='R' || chessPiece=='p' )
+	        { /*printf("yokarkadas\n");*/ return 0;}
+
+			
+	    
+			i--;
+			
+		}
+
+		if( (i==targetCol%96) )
+		{
+			
+			chessPiece=board[(absulute(sourceRow-8)*8 +(i))-1];
+			
+			if(chessPiece=='q' || chessPiece=='k'|| chessPiece=='b'|| chessPiece=='n'|| chessPiece=='r' || chessPiece=='p' || chessPiece==' ' ) 
+			
+			board[(absulute(sourceRow-8)*8 +(i))-1]=sourcePiece;
+			board[(absulute(sourceRow-8)*8 +(sourceCol%96))-1]=' ';
+			
+			return 1;
+		}
+		else
+		{
+			/*printf("olmadi\n");*/
+			return 0;
+		}
+	
+	}
+	
+	else
+	{
+		return 0;
+	}
+	return 0;
+
+}
+
+int moveVertical(char *board,int sourceRow, int targetRow, char sourceCol)
+{
+	int j;
+	char chessPiece,sourcePiece;
+
+	sourcePiece=board[(absulute(sourceRow-8)*8 +(sourceCol%96))-1];
+	
+	if(sourceRow<targetRow)/* yukarı*/
+	{
+
+		j = sourceRow+1 ; 
+		chessPiece=board[(absulute((j)-8)*8 +(sourceCol%96))-1]; 
+		
+		/*printf(" sourceRow<targetRow >>>> %c \n",chessPiece);*/
+		
+		while( (chessPiece==' ') && (j < targetRow) )
+		{
+			chessPiece=board[(absulute(j-8)*8 +(sourceCol%96))-1];
+			
+			if(chessPiece=='q' || chessPiece=='k'|| chessPiece=='b'|| chessPiece=='n'|| chessPiece=='r' || chessPiece=='P' || chessPiece=='Q' || chessPiece=='K'|| chessPiece=='B'|| chessPiece=='N'|| chessPiece=='R' || chessPiece=='p' )
+	        { /*printf("yokarkadas\n");*/ return 0;}
+
+	    	/*printf(">>%d\n",i );*/
+			j++;
+			
+		}
+
+		if( (j==targetRow) )
+		{
+			
+			chessPiece=board[(absulute(j-8)*8 +(sourceCol%96))-1];
+			
+			if(chessPiece=='q' || chessPiece=='k'|| chessPiece=='b'|| chessPiece=='n'|| chessPiece=='r' || chessPiece=='p' || chessPiece==' ' ) 
+			
+			board[(absulute(j-8)*8 +(sourceCol%96))-1]=sourcePiece;
+			board[(absulute(sourceRow-8)*8 +(sourceCol%96))-1]=' ';
+			return 1;
+		}
+		else
+		{
+			/*printf("olmadi\n");*/
+			return 0;
+		}
+	
+	}
+	else if(sourceRow>targetRow) /* assagi*/
+	{
+
+		j = sourceRow-1 ; 
+		chessPiece=board[(absulute((sourceRow-1)-8)*8 +(sourceCol%96))-1]; /* row+1 cevrdim row-1*/
+		
+		/*printf(" sourceRow<targetRow >>>> %c \n",chessPiece);*/
+		
+		while( (chessPiece==' ') && (j > targetRow) )
+		{
+			chessPiece=board[(absulute(j-8)*8 +(sourceCol%96))-1];
+			
+			if(chessPiece=='q' || chessPiece=='k'|| chessPiece=='b'|| chessPiece=='n'|| chessPiece=='r' || chessPiece=='P' || chessPiece=='Q' || chessPiece=='K'|| chessPiece=='B'|| chessPiece=='N'|| chessPiece=='R' || chessPiece=='p' )
+	        { /*printf("yokarkadas\n");*/ return 0;}
+
+	    	/*printf(">>%d\n",i );*/
+			j--;
+			
+		}
+
+		if( (j==targetRow) )
+		{
+			
+			chessPiece=board[(absulute(j-8)*8 +(sourceCol%96))-1];
+			
+			if( chessPiece=='q' || chessPiece=='k'|| chessPiece=='b'|| chessPiece=='n'|| chessPiece=='r' || chessPiece=='p' || chessPiece==' ' ) 
+			
+			board[(absulute(j-8)*8 +(sourceCol%96))-1]=sourcePiece;
+			board[(absulute(sourceRow-8)*8 +(sourceCol%96))-1]=' ';
+			
+			return 1;
+		}
+		else
+		{
+			/*printf("olmadi\n");*/
+			return 0;
+		}
+
+	}
+	else
+	{
+		return 0;
+	}
+
+}
+
+
+
+
+void getPosition(char *col, int *row) 
+{
+	scanf(" %c%d", col,row );
+}
+
+int isValidCell(char col, int row) 
+{
+
+	if( ((int)(col) >= (int)('a') && (int)(col) <= (int)('h')) 
+		    					  && (row>=1 && row<=8 )     )
+	{
+		/*printf(" colon>> %c  row >>%d güzle \n" ,col,row  );*/
+
+		return 1;
+	}
+	else
+	{
+		/*printf("colon>> %c  row >>%d  yanlis deluk!!!\n" ,col,row );*/
+		return 0;
+	}
+
+}
+
+void printBoard(char *board)
+{
+
+	int i,a;
+	a = 0;
+	printf("\n");
+	
+	printf("  a b c d e f g h \n");
+	printf("  - - - - - - - - \n");
+
+	for(i=0;i<=7;i++)
+	{
+
+	printf("%d|",8-i );
+		for ( ; a < 8*(i+1); a++)
+		{
+			printf("%c",board[a] );
+			if ( a <8*(i+1)-1)
+			{
+				printf(" ");
+			}
+		}
+	
+	printf("|");
+	printf("\n");
+
+	}
+
+	printf("  - - - - - - - - \n");
+
+}
+
+/*	char testarray[]={' ',' ','a',' ','b',' ','c',' ','d',' ','e',' ','f',' ','g',' ','h',' ',
+					  ' ',' ','-',' ','-',' ','-',' ','-',' ','-',' ','-',' ','-',' ','-',' ',
+					  '8','|','r',' ','n',' ','b',' ','q',' ','k',' ','b',' ','n',' ','r','|',
+					  '7','|','p',' ','p',' ','p',' ','p',' ','p',' ','p',' ','p',' ','p','|',
+					  '6','|',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','|',
+					  '5','|',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','|',
+					  '4','|',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','|',
+					  '3','|',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','|',
+					  '2','|','P',' ','P',' ','P',' ','P',' ','P',' ','P',' ','P',' ','P','|',
+					  '1','|','R',' ','N',' ','B',' ','Q',' ','K',' ','B',' ','N',' ','R','|', 
+					  ' ',' ','-',' ','-',' ','-',' ','-',' ','-',' ','-',' ','-',' ','-',' '};
+
+					  */
